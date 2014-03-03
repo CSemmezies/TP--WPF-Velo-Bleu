@@ -9,8 +9,9 @@ using Microsoft.Phone.Maps.Toolkit;
 using System.Device.Location;
 using Microsoft.Phone.Controls;
 using System.Windows.Navigation;
-using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace TP__WPF_Velo_Bleu
 {
@@ -34,9 +35,9 @@ namespace TP__WPF_Velo_Bleu
             //MessageBox.Show(index.ToString());
             Stand item = tab[index];
 
-            station_id.Text = "station n°" + item.Id;
+            station_id.Text = "Station n°" + item.Id;
             add.Text = item.Add.ToString();
-            ab.Text = "Place : " + item.Ab.ToString();
+            ab.Text = "Places : " + item.Ab.ToString();
             ap.Text = "Velos : " + item.Ap.ToString();
             ac.Text = "Capacité disponible : " + item.Ac.ToString();
             tc.Text = "Capacité totale: : " + item.Tc.ToString();
@@ -55,10 +56,31 @@ namespace TP__WPF_Velo_Bleu
             //pin.Location = loc;
             ContentMap.Children.Add(Carte);
 
+            ImageBrush imgBrush = new ImageBrush();
+            imgBrush.Stretch = System.Windows.Media.Stretch.UniformToFill;
+            imgBrush.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri(@"velo_bleu.png", UriKind.Relative));
+
+            Grid MyGrid = new Grid();
+            MyGrid.RowDefinitions.Add(new RowDefinition());
+            MyGrid.RowDefinitions.Add(new RowDefinition());
+            MyGrid.Background = new SolidColorBrush(Colors.Transparent);
+
+            Rectangle MyRectangle = new Rectangle();
+            MyRectangle.Fill = imgBrush;
+            MyRectangle.Height = 52;
+            MyRectangle.Width = 85;
+            MyRectangle.SetValue(Grid.RowProperty, 0);
+            MyRectangle.SetValue(Grid.ColumnProperty, 0);
+
+            MyGrid.Children.Add(MyRectangle);
+
             MapLayer layer = new MapLayer();
             MapOverlay overlay = new MapOverlay();
             overlay.GeoCoordinate = pin.GeoCoordinate;
+            overlay.Content = MyGrid;
             layer.Add(overlay);
+
+
 
             //Carte.Children.Add(pin);
             Carte.Layers.Add(layer);

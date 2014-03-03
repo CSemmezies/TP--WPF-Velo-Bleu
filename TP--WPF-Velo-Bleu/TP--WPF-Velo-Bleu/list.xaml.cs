@@ -1,20 +1,19 @@
-﻿using System;
+﻿using Microsoft.Phone.Controls;
+using Microsoft.Phone.Controls.Primitives;
+using Microsoft.Phone.Maps.Controls;
+using Microsoft.Phone.Maps.Toolkit;
+using Microsoft.Phone.Shell;
+using System;
 using System.Collections.Generic;
 using System.Device.Location;
 using System.Linq;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.Phone.Controls.Primitives;
-using System.Windows.Navigation;
-using Microsoft.Phone.Controls;
-using Microsoft.Phone.Shell;
-using System.Xml.Linq;
-using Microsoft.Phone.Maps.Controls;
-using Microsoft.Phone.Maps.Toolkit;
-using Microsoft.Phone.Controls;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 
 namespace TP__WPF_Velo_Bleu
 {
@@ -78,9 +77,11 @@ namespace TP__WPF_Velo_Bleu
                     //Descendants
                     if (item.HasElements)
                     {
+                        //MessageBox.Show(item.Element("lng").Value);
+                        //Double test = Double.Parse(item.Element("lng").Value);
                         if (item.Element("wcom") != null) std.Add = item.Element("wcom").Value;
-                        if (item.Element("lng") != null) std.Lng = double.Parse(item.Element("lng").Value);
-                        if (item.Element("lat") != null) std.Lat = double.Parse(item.Element("lat").Value);
+                        if (item.Element("lng") != null) std.Lng = Convert.ToDouble(item.Element("lng").Value.Replace(".",","));
+                        if (item.Element("lat") != null) std.Lat = Convert.ToDouble(item.Element("lat").Value.Replace(".",","));
                         if (item.Element("ab") != null) std.Ab = int.Parse(item.Element("ab").Value);
                         if (item.Element("ac") != null) std.Ac = int.Parse(item.Element("ac").Value);
                         if (item.Element("ap") != null) std.Ap = int.Parse(item.Element("ap").Value);
@@ -95,44 +96,46 @@ namespace TP__WPF_Velo_Bleu
                         loc.Longitude = std.Lng;
                         loc.Latitude = std.Lat;
                         Pushpin pin = new Pushpin();
+
                         ToolTipService.SetToolTip(pin, "station n°" + std.Id + "\n" + std.Ap + " places disponible" + "\n" + std.Ab + " vélos disponible");
 
                         pin.TabIndex = inc;
 
-                        //pin.Location = loc;
                         pin.GeoCoordinate = loc;
                         pin.Name = inc.ToString();
 
                         Carte.Center = loc;
-                        pin.DoubleTap += pin_event;
-                        //pin.Template = this.Resources["PinTemplate"] as ControlTemplate;
-                        ImageBrush imgBrush = new ImageBrush();
+                        pin.Tap += pin_event;
 
+                        ImageBrush imgBrush = new ImageBrush();
                         imgBrush.Stretch = System.Windows.Media.Stretch.UniformToFill;
                         imgBrush.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri(@"velo_bleu.png", UriKind.Relative));
 
-                        //pin.Background = imgBrush;
+                        Grid MyGrid = new Grid();
+                        MyGrid.RowDefinitions.Add(new RowDefinition());
+                        MyGrid.RowDefinitions.Add(new RowDefinition());
+                        MyGrid.Background = new SolidColorBrush(Colors.Transparent);
 
+                        Rectangle MyRectangle = new Rectangle();
+                        MyRectangle.Fill = imgBrush;
+                        MyRectangle.Height = 52;
+                        MyRectangle.Width = 85;
+                        MyRectangle.Name = inc.ToString();
+                        MyRectangle.SetValue(Grid.RowProperty, 0);
+                        MyRectangle.SetValue(Grid.ColumnProperty, 0);
+                        MyRectangle.Tap += pin_event;
+                        MyGrid.Children.Add(MyRectangle);
 
-                        //Test C
                         MapLayer layer = new MapLayer();
                         MapOverlay overlay = new MapOverlay();
-                        overlay.Content = pin.Name;
+                        overlay.Content = MyGrid;
                         overlay.GeoCoordinate = pin.GeoCoordinate;
                         layer.Add(overlay);
 
-                        //Carte.Children.Add(pin);
                         Carte.Layers.Add(layer);
                         inc++;
-
-
                     }
-
-
                     stands.Add(std);
-
-
-
                 }
 
             }
@@ -141,9 +144,8 @@ namespace TP__WPF_Velo_Bleu
         }
         void pin_event(object sender, RoutedEventArgs e)
         {
-            Pushpin pin = (Pushpin)sender;
-            //MessageBox.Show("pin: "+pin.Name);
-            detail(pin.TabIndex);
+            Rectangle pin = (Rectangle)sender;
+            detail(Convert.ToInt32(pin.Name));
 
         }
         private void stand_Tap(object sender, System.Windows.Input.GestureEventArgs e)
@@ -156,10 +158,16 @@ namespace TP__WPF_Velo_Bleu
         {
             PhoneApplicationService.Current.State["stands"] = stands;
             PhoneApplicationService.Current.State["index"] = index;
+            
             //on lance la mapView
             NavigationService.Navigate(new Uri("/detail.xaml", UriKind.Relative));
         }
 
+        private void list_event(object sender, RoutedEventArgs e)
+        {
+            PhoneApplicationService.Current.State["stands"] = stands;
+            NavigationService.Navigate(new Uri("/standlist.xaml", UriKind.Relative));
+        }
         private void ButtonPlus(object sender, RoutedEventArgs e)
         {
             double offset = Carte.ZoomLevel;
